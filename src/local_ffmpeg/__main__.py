@@ -7,7 +7,7 @@ import sys
 from typing import List
 
 # 상대 임포트 대신 절대 임포트 사용
-from local_ffmpeg import install, check, uninstall, __version__
+from local_ffmpeg import install, is_installed, uninstall, __version__
 
 
 def main(args: List[str] = None) -> int:
@@ -52,8 +52,8 @@ def main(args: List[str] = None) -> int:
         print(message)
         return 0 if success else 1
 
-    elif args.command == "check":
-        installed = check(args.path)
+    elif args.command == "is_installed":
+        installed = is_installed(args.path)
         if installed:
             print(f"FFmpeg is installed at {args.path}")
         else:

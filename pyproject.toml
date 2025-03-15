@@ -1,6 +1,6 @@
 [project]
 name = "local-ffmpeg"
-version = "0.1.3"
+version = "0.1.4"
 description = "Python utility that automatically downloads and installs FFmpeg binaries locally for your project"
 readme = "README.md"
 authors = [

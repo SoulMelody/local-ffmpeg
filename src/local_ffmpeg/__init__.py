@@ -14,7 +14,7 @@ from local_ffmpeg.__platform import get_platform_handler
 __version__ = "0.1.0"
 
 # Export public API
-__all__ = ["install", "uninstall", "check"]
+__all__ = ["install", "uninstall", "is_installed"]
 
 
 def install(path: str = "./ffmpeg/") -> Tuple[bool, str]:
@@ -77,7 +77,7 @@ def uninstall(path: str = "./ffmpeg/") -> bool:
         return False
 
 
-def check(path: str = "./ffmpeg/") -> bool:
+def is_installed(path: str = "./ffmpeg/") -> bool:
     """
     Check if FFmpeg is installed at the specified path or available in PATH.
 

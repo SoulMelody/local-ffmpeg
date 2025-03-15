@@ -43,12 +43,12 @@ pip install -e .
 ### 🐍 Python API
 
 ```python
-from local_ffmpeg import check_ffmpeg_installed, install_ffmpeg
+from local_ffmpeg import is_installed, install
 
 # Check if FFmpeg is already installed
-if not check_ffmpeg_installed(path="./custom/path"):
+if not is_installed(path="./custom/path"):
     # Install FFmpeg if not found
-    success, message = install_ffmpeg(path="./custom/path")
+    success, message = install(path="./custom/path")
     if success:
         print(message)  # FFmpeg installed successfully
     else:
@@ -69,11 +69,11 @@ python -m local_ffmpeg install --path /custom/path
 ```
 #### 🔍 Check if FFmpeg is installed (default path: ./ffmpeg)
 ```bash
-python -m local_ffmpeg check
+python -m local_ffmpeg is_installed
 ```
 #### 🔎 Check if FFmpeg is installed at a custom path
 ```bash
-python -m local_ffmpeg check --path /custom/path
+python -m local_ffmpeg is_installed --path /custom/path
 ```
 #### ℹ️ Show help information
 ```bash
