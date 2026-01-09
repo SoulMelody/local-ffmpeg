@@ -58,11 +58,13 @@ class WindowsHandler:
 
             # Find and move the binaries to the install path
             extracted_dir = os.path.dirname(download_path)
+            binary_path = os.path.join(install_path, "bin")
+            os.makedirs(binary_path, exist_ok=True)
             for root, _, files in os.walk(extracted_dir):
                 for file in files:
                     if file.endswith((".exe", ".dll")):
                         src = os.path.join(root, file)
-                        dst = os.path.join(install_path, file)
+                        dst = os.path.join(binary_path, file)
                         shutil.move(src, dst)
 
             # Clean up temporary files
@@ -81,10 +83,10 @@ class WindowsHandler:
         Args:
             install_path: Directory where FFmpeg binaries are installed
         """
-        for binary in ("ffmpeg.exe", "ffprobe.exe", "ffplay.exe"):
-            binary_path = os.path.join(install_path, binary)
-            if os.path.exists(binary_path):
-                os.remove(binary_path)
+        for dir in ("bin",):
+            dir_path = os.path.join(install_path, dir)
+            if os.path.exists(dir_path):
+                shutil.rmtree(dir_path)
 
     def check_installed(self, path: Optional[str] = None) -> bool:
         """
