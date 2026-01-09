@@ -3,6 +3,7 @@ macOS-specific implementation for FFmpeg installation
 """
 
 import os
+import pathlib
 import platform
 import shutil
 import subprocess
@@ -15,7 +16,7 @@ __all__ = ["MacOSHandler"]
 class MacOSHandler:
     """Handler for macOS platform"""
 
-    def get_download_url(self) -> Dict[str, str]:
+    def get_download_url(self) -> str:
         """
         Get the appropriate FFmpeg download URLs for macOS
 
@@ -30,18 +31,11 @@ class MacOSHandler:
 
         # Map architecture to appropriate URL format
         if arch == "x86_64":
-            arch_name = "intel"
+            return "https://github.com/ColorsWind/FFmpeg-macOS/releases/download/n5.0.1-patch3/FFmpeg_shared-n5.0.1-OSX-x86_64.zip"
         elif arch == "arm64":
-            arch_name = "arm"
+            return "https://github.com/ColorsWind/FFmpeg-macOS/releases/download/n5.0.1-patch3/FFmpeg-shared-n5.0.1-OSX-arm64.zip"
         else:
             raise RuntimeError(f"Unsupported macOS architecture: {arch}")
-
-        # Return URLs for each binary (using version 7.1)
-        return {
-            "ffmpeg": f"https://www.osxexperts.net/ffmpeg71{arch_name}.zip",
-            "ffplay": f"https://www.osxexperts.net/ffplay71{arch_name}.zip",
-            "ffprobe": f"https://www.osxexperts.net/ffprobe71{arch_name}.zip",
-        }
 
     def install(self, download_path: str, install_path: str) -> None:
         """
@@ -55,37 +49,33 @@ class MacOSHandler:
         os.makedirs(install_path, exist_ok=True)
 
         try:
-            # Get download URLs for all binaries
-            urls = self.get_download_url()
+            # Extract the binary from the zip file
+            with zipfile.ZipFile(download_path, "r") as zip_ref:
+                # List files in the archive
+                for file_info in zip_ref.infolist():
+                    if "bin/" in file_info.filename or "lib/" in file_info.filename:
+                        zip_ref.extract(file_info, path=os.path.dirname(download_path))
+            # Find and move the binaries to the install path
+            extracted_dir = os.path.dirname(download_path)
+            for root, _, files in os.walk(extracted_dir):
+                subdir = pathlib.Path(root).relative_to(extracted_dir).name
+                if subdir == "bin":
+                    os.makedirs(os.path.join(install_path, subdir), exist_ok=True)
+                    for file in files:
+                        src = os.path.join(root, file)
+                        dst = os.path.join(install_path, subdir, file)
+                        shutil.move(src, dst)
+                        os.chmod(dst, 0o755)  # Make executable
+                elif subdir == "lib":
+                    os.makedirs(os.path.join(install_path, subdir), exist_ok=True)
+                    for file in files:
+                        src = os.path.join(root, file)
+                        dst = os.path.join(install_path, subdir, file)
+                        shutil.move(src, dst)
 
-            # Process each binary
-            for binary in ["ffmpeg", "ffplay", "ffprobe"]:
-                binary_zip = os.path.join(download_path, f"{binary}.zip")
-
-                # Extract the binary from the zip file
-                with zipfile.ZipFile(binary_zip, "r") as zip_ref:
-                    # List files in the archive
-                    file_list = zip_ref.namelist()
-
-                    # The archive should contain a single file (the binary)
-                    if len(file_list) != 1:
-                        print(f"Warning: Expected 1 file in {binary} archive, found {len(file_list)}")
-
-                    # Extract the binary to the installation path
-                    for file_name in file_list:
-                        # Extract and rename to standard binary name
-                        zip_ref.extract(file_name, path=install_path)
-                        extracted_path = os.path.join(install_path, file_name)
-                        target_path = os.path.join(install_path, binary)
-
-                        # Rename if necessary
-                        if os.path.basename(extracted_path) != binary:
-                            os.rename(extracted_path, target_path)
-
-                # Make binary executable
-                binary_path = os.path.join(install_path, binary)
-                if os.path.exists(binary_path):
-                    os.chmod(binary_path, 0o755)
+            # Clean up temporary files
+            if os.path.exists(download_path):
+                os.remove(download_path)
 
             print(f"FFmpeg has been installed to {install_path}")
 
@@ -99,24 +89,10 @@ class MacOSHandler:
         Args:
             install_path: Directory where FFmpeg binaries are installed
         """
-        if os.path.exists(install_path):
-            try:
-                # Remove the binaries
-                for binary in ["ffmpeg", "ffplay", "ffprobe"]:
-                    binary_path = os.path.join(install_path, binary)
-                    if os.path.exists(binary_path):
-                        os.remove(binary_path)
-
-                # Remove directory if empty
-                if not os.listdir(install_path):
-                    os.rmdir(install_path)
-
-                print(f"FFmpeg has been uninstalled from {install_path}")
-
-            except Exception as e:
-                raise RuntimeError(f"Failed to uninstall FFmpeg: {str(e)}")
-        else:
-            print(f"FFmpeg installation not found at {install_path}")
+        for dir in ("bin", "lib"):
+            dir_path = os.path.join(install_path, dir)
+            if os.path.exists(dir_path):
+                shutil.rmtree(dir_path)
 
     def check_installed(self, path: Optional[str] = None) -> bool:
         # Check in specified path if provided
