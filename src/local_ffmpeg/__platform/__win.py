@@ -52,11 +52,7 @@ class WindowsHandler:
             with zipfile.ZipFile(download_path, "r") as zip_ref:
                 # Extract only bin directory (usually in a subdirectory)
                 for file_info in zip_ref.infolist():
-                    if (
-                        "/bin/ffmpeg.exe" in file_info.filename
-                        or "/bin/ffprobe.exe" in file_info.filename
-                        or "/bin/ffplay.exe" in file_info.filename
-                    ):
+                    if file_info.filename.endswith((".exe", ".dll")):
                         # Extract to temporary location
                         zip_ref.extract(file_info, path=os.path.dirname(download_path))
 
@@ -64,7 +60,7 @@ class WindowsHandler:
             extracted_dir = os.path.dirname(download_path)
             for root, _, files in os.walk(extracted_dir):
                 for file in files:
-                    if file in ("ffmpeg.exe", "ffprobe.exe", "ffplay.exe"):
+                    if file.endswith((".exe", ".dll")):
                         src = os.path.join(root, file)
                         dst = os.path.join(install_path, file)
                         shutil.move(src, dst)
