@@ -3,6 +3,7 @@ Linux-specific implementation for FFmpeg installation
 """
 
 import os
+import pathlib
 import platform
 import shutil
 import subprocess
