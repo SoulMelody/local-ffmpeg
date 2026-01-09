@@ -29,9 +29,9 @@ class LinuxHandler:
         base_url = "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest"
 
         if arch in ("x86_64", "amd64"):
-            return f"{base_url}/ffmpeg-master-latest-linux64-gpl.tar.xz"
+            return f"{base_url}/ffmpeg-master-latest-linux64-gpl-shared.tar.xz"
         elif arch in ("aarch64", "arm64"):
-            return f"{base_url}/ffmpeg-master-latest-linuxarm64-gpl.tar.xz"
+            return f"{base_url}/ffmpeg-master-latest-linuxarm64-gpl-shared.tar.xz"
         else:
             raise RuntimeError(f"Unsupported Linux architecture: {arch}")
 
@@ -55,7 +55,7 @@ class LinuxHandler:
                 # Extract only bin directory (usually in a subdirectory)
                 members = []
                 for member in tar.getmembers():
-                    if "bin/ffmpeg" in member.name or "bin/ffprobe" in member.name or "bin/ffplay" in member.name:
+                    if "bin/" in member.name or "lib/" in member.name:
                         members.append(member)
 
                 if not members:
@@ -66,12 +66,20 @@ class LinuxHandler:
             # Find and move the binaries to the install path
             extracted_dir = os.path.dirname(download_path)
             for root, _, files in os.walk(extracted_dir):
-                for file in files:
-                    if file in ("ffmpeg", "ffprobe", "ffplay"):
+                subdir = pathlib.Path(root).relative_to(extracted_dir).name
+                if subdir == "bin":
+                    os.makedirs(os.path.join(install_path, subdir), exist_ok=True)
+                    for file in files:
                         src = os.path.join(root, file)
-                        dst = os.path.join(install_path, file)
+                        dst = os.path.join(install_path, subdir, file)
                         shutil.move(src, dst)
                         os.chmod(dst, 0o755)  # Make executable
+                elif subdir == "lib":
+                    os.makedirs(os.path.join(install_path, subdir), exist_ok=True)
+                    for file in files:
+                        src = os.path.join(root, file)
+                        dst = os.path.join(install_path, subdir, file)
+                        shutil.move(src, dst)
 
             # Clean up temporary files
             if os.path.exists(download_path):
@@ -89,10 +97,10 @@ class LinuxHandler:
         Args:
             install_path: Directory where FFmpeg binaries are installed
         """
-        for binary in ("ffmpeg", "ffprobe", "ffplay"):
-            binary_path = os.path.join(install_path, binary)
-            if os.path.exists(binary_path):
-                os.remove(binary_path)
+        for dir in ("bin", "lib"):
+            dir_path = os.path.join(install_path, dir)
+            if os.path.exists(dir_path):
+                shutil.rmtree(dir_path)
 
     def check_installed(self, path: Optional[str] = None) -> bool:
         """
