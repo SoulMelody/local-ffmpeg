@@ -26,8 +26,11 @@ class WindowsHandler:
             RuntimeError: If architecture is unsupported
         """
         # Check if x64 architecture
-        if platform.machine().endswith("64"):
-            return "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip"
+        arch = platform.machine()
+        if arch == "AMD64":
+            return "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-lgpl-shared.zip"
+        elif arch == "ARM64":
+            return "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-winarm64-lgpl-shared.zip"
         else:
             raise RuntimeError("Only 64-bit Windows is supported")
 
